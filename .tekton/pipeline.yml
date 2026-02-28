@@ -1,0 +1,76 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: ci-cd-pipeline
+  namespace: sn-labs-khaledabdell
+spec:
+  workspaces:
+    - name: output
+
+  tasks:
+    - name: cleanup
+      taskRef:
+        name: cleanup
+      workspaces:
+        - name: source
+          workspace: output
+
+    - name: git-clone
+      taskRef:
+        name: git-clone
+      runAfter:
+        - cleanup
+      workspaces:
+        - name: source
+          workspace: output
+      params:
+        - name: url
+          value: https://github.com/abkhalid99/ci-cd-final-project.git
+        - name: revision
+          value: main
+
+    - name: flake8-lint
+      taskRef:
+        name: flake8
+      runAfter:
+        - git-clone
+      workspaces:
+        - name: source
+          workspace: output
+
+    - name: nose-tests
+      taskRef:
+        name: nose
+      runAfter:
+        - flake8-lint
+      workspaces:
+        - name: source
+          workspace: output
+      params:
+        - name: args
+          value: "-v"
+
+    - name: build-image
+      taskRef:
+        name: buildah
+      runAfter:
+        - nose-tests
+      workspaces:
+        - name: source
+          workspace: output
+      params:
+        - name: IMAGE
+          value: image-registry.openshift-image-registry.svc:5000/sn-labs-khaledabdell/ci-cd-final-project:latest
+
+  finally:
+    - name: deploy
+      taskRef:
+        name: oc-client
+      workspaces:
+        - name: source
+          workspace: output
+      params:
+        - name: app-name
+          value: ci-cd-final-project
+        - name: build-image
+          value: image-registry.openshift-image-registry.svc:5000/sn-labs-khaledabdell/ci-cd-final-project:latest

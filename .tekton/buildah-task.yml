@@ -1,0 +1,17 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: buildah
+spec:
+  workspaces:
+    - name: source
+
+  steps:
+    - name: fake-build
+      image: registry.access.redhat.com/ubi8/ubi-minimal
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        echo "Simulating image build..."
+        sleep 5
+        echo "Build completed successfully."

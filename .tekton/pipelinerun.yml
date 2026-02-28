@@ -1,0 +1,13 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: ci-cd-pipeline-run
+  namespace: sn-labs-khaledabdell
+spec:
+  serviceAccountName: pipeline
+  pipelineRef:
+    name: ci-cd-pipeline
+  workspaces:
+    - name: output
+      persistentVolumeClaim:
+        claimName: oc-lab-pvc
